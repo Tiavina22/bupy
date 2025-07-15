@@ -19,8 +19,6 @@ npm install
 
 ## Structure du projet
 - `src/` : logique principale
-- `config/` : fichiers de configuration
-- `.github/` : instructions Copilot
 
 ## Auteur
-Votre nom ici
+Tiavina22
