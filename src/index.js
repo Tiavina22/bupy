@@ -4,7 +4,10 @@ require('dotenv').config();
 
 
 
+
 const { backupPostgres } = require('./backup');
+const { backupMySQL } = require('./backup-mysql');
+const { backupSQLite } = require('./backup-sqlite');
 const { cleanupBackups } = require('./retention');
 const { sendNotification } = require('./notify');
 
@@ -13,12 +16,12 @@ const cron = require('node-cron');
 
 
 
+
 const {
-  PGHOST: host,
-  PGPORT: port,
-  PGUSER: user,
-  PGPASSWORD: password,
-  PGDATABASE: database,
+  DB_TYPE = 'postgres',
+  PGHOST, PGPORT, PGUSER, PGPASSWORD, PGDATABASE,
+  MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE,
+  SQLITE_PATH,
   BACKUP_DIR: backupDir,
   CRON_SCHEDULE: cronSchedule,
   RETENTION_DAYS: retentionDays,
@@ -29,10 +32,7 @@ const {
   NOTIFY_EMAIL
 } = process.env;
 
-if (!host || !port || !user || !password || !database || !backupDir) {
-  console.error('Configuration manquante. Veuillez vérifier votre fichier .env.');
-  process.exit(1);
-}
+
 
 
 
@@ -40,10 +40,24 @@ if (!host || !port || !user || !password || !database || !backupDir) {
 async function runBackup() {
   let notifySubject, notifyText, attachmentPath = undefined;
   try {
-    const filePath = await backupPostgres({ host, port, user, password, database, backupDir });
-    const msg = `[${new Date().toISOString()}] Backup PostgreSQL réussi : ${filePath}`;
+    let filePath, msg;
+    if (DB_TYPE === 'postgres') {
+      if (!PGHOST || !PGPORT || !PGUSER || !PGPASSWORD || !PGDATABASE || !backupDir) throw new Error('Config Postgres manquante');
+      filePath = await backupPostgres({ host: PGHOST, port: PGPORT, user: PGUSER, password: PGPASSWORD, database: PGDATABASE, backupDir });
+      msg = `[${new Date().toISOString()}] Backup PostgreSQL réussi : ${filePath}`;
+    } else if (DB_TYPE === 'mysql') {
+      if (!MYSQL_HOST || !MYSQL_PORT || !MYSQL_USER || !MYSQL_PASSWORD || !MYSQL_DATABASE || !backupDir) throw new Error('Config MySQL manquante');
+      filePath = await backupMySQL({ host: MYSQL_HOST, port: MYSQL_PORT, user: MYSQL_USER, password: MYSQL_PASSWORD, database: MYSQL_DATABASE, backupDir });
+      msg = `[${new Date().toISOString()}] Backup MySQL réussi : ${filePath}`;
+    } else if (DB_TYPE === 'sqlite') {
+      if (!SQLITE_PATH || !backupDir) throw new Error('Config SQLite manquante');
+      filePath = await backupSQLite({ sqlitePath: SQLITE_PATH, backupDir });
+      msg = `[${new Date().toISOString()}] Backup SQLite réussi : ${filePath}`;
+    } else {
+      throw new Error('DB_TYPE non supporté');
+    }
     console.log(msg);
-    notifySubject = 'bupy: Backup PostgreSQL réussi';
+    notifySubject = `bupy: Backup ${DB_TYPE} réussi`;
     notifyText = msg;
     attachmentPath = filePath;
     if (retentionDays && !isNaN(Number(retentionDays))) {
@@ -55,9 +69,9 @@ async function runBackup() {
       }
     }
   } catch (err) {
-    const msg = `[${new Date().toISOString()}] Erreur lors du backup PostgreSQL : ${err.message}`;
+    const msg = `[${new Date().toISOString()}] Erreur backup : ${err.message}`;
     console.error(msg);
-    notifySubject = 'bupy: Erreur backup PostgreSQL';
+    notifySubject = `bupy: Erreur backup ${DB_TYPE}`;
     notifyText = msg;
     attachmentPath = undefined;
   }
