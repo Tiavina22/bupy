@@ -36,14 +36,16 @@ if (!host || !port || !user || !password || !database || !backupDir) {
 
 
 
+
 async function runBackup() {
-  let notifySubject, notifyText;
+  let notifySubject, notifyText, attachmentPath = undefined;
   try {
     const filePath = await backupPostgres({ host, port, user, password, database, backupDir });
     const msg = `[${new Date().toISOString()}] Backup PostgreSQL réussi : ${filePath}`;
     console.log(msg);
     notifySubject = 'bupy: Backup PostgreSQL réussi';
     notifyText = msg;
+    attachmentPath = filePath;
     if (retentionDays && !isNaN(Number(retentionDays))) {
       const deleted = await cleanupBackups(backupDir, Number(retentionDays));
       if (deleted > 0) {
@@ -57,6 +59,7 @@ async function runBackup() {
     console.error(msg);
     notifySubject = 'bupy: Erreur backup PostgreSQL';
     notifyText = msg;
+    attachmentPath = undefined;
   }
   // Envoi notification email si config présente
   if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && NOTIFY_EMAIL) {
@@ -65,7 +68,8 @@ async function runBackup() {
         {
           to: NOTIFY_EMAIL,
           subject: notifySubject,
-          text: notifyText
+          text: notifyText,
+          attachmentPath
         },
         {
           host: SMTP_HOST,
