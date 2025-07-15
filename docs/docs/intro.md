@@ -10,15 +10,16 @@ sidebar_position: 1
 ![GitHub license](https://img.shields.io/github/license/Tiavina22/bupy)
 ![GitHub last commit](https://img.shields.io/github/last-commit/Tiavina22/bupy)
 
-**bupy** est un outil Node.js open source pour automatiser les sauvegardes (backups) de bases de données PostgreSQL.
 
-> Sauvegardes automatiques, rétention intelligente, notifications email, configuration simple.
+**bupy** est un outil Node.js open source pour automatiser les sauvegardes (backups) de bases de données PostgreSQL, MySQL et SQLite.
+
+> Sauvegardes automatiques, multi-base, rétention intelligente, notifications email, configuration simple.
 
 ---
 
 ## 🚀 Fonctionnalités principales
 
-- Sauvegarde automatique de PostgreSQL (via `pg_dump`)
+- Sauvegarde automatique de PostgreSQL (via `pg_dump`), MySQL (via `mysqldump`) ou SQLite (copie du fichier)
 - Stockage local configurable
 - Planification flexible (cron)
 - Rétention automatique des anciens backups
@@ -39,12 +40,64 @@ npm install
 
 ## ⚡️ Prise en main rapide
 
+
 1. Copiez `.env.example` en `.env` et adaptez la configuration.
-2. Lancez un backup immédiat :
+2. Choisissez le type de base à sauvegarder avec `DB_TYPE` :
+   - `postgres` (par défaut)
+   - `mysql`
+   - `sqlite`
+3. Lancez un backup immédiat :
    ```bash
    node src/index.js
    ```
-3. Consultez la [documentation complète](https://tiavina22.github.io/bupy/)
+4. Consultez la [documentation complète](https://tiavina22.github.io/bupy/)
+---
+
+## 🛠️ Exemples de configuration
+
+### PostgreSQL
+```env
+DB_TYPE=postgres
+PGHOST=localhost
+PGPORT=5432
+PGUSER=postgres
+PGPASSWORD=motdepasse
+PGDATABASE=ma_base
+BACKUP_DIR=./backups
+```
+
+### MySQL
+```env
+DB_TYPE=mysql
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=motdepasse
+MYSQL_DATABASE=ma_base
+BACKUP_DIR=./backups
+```
+
+### SQLite
+```env
+DB_TYPE=sqlite
+SQLITE_PATH=./ma_base.db
+BACKUP_DIR=./backups
+```
+DB_TYPE=mysql
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=motdepasse
+MYSQL_DATABASE=ma_base
+BACKUP_DIR=./backups
+```
+
+### SQLite
+```env
+DB_TYPE=sqlite
+SQLITE_PATH=./ma_base.db
+BACKUP_DIR=./backups
+```
 
 ---
 
