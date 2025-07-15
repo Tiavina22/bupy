@@ -3,11 +3,14 @@
 require('dotenv').config();
 
 
+
 const { backupPostgres } = require('./backup');
 const { cleanupBackups } = require('./retention');
+const { sendNotification } = require('./notify');
 
 
 const cron = require('node-cron');
+
 
 
 const {
@@ -18,7 +21,12 @@ const {
   PGDATABASE: database,
   BACKUP_DIR: backupDir,
   CRON_SCHEDULE: cronSchedule,
-  RETENTION_DAYS: retentionDays
+  RETENTION_DAYS: retentionDays,
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_USER,
+  SMTP_PASS,
+  NOTIFY_EMAIL
 } = process.env;
 
 if (!host || !port || !user || !password || !database || !backupDir) {
@@ -27,18 +35,49 @@ if (!host || !port || !user || !password || !database || !backupDir) {
 }
 
 
+
 async function runBackup() {
+  let notifySubject, notifyText;
   try {
     const filePath = await backupPostgres({ host, port, user, password, database, backupDir });
-    console.log(`[${new Date().toISOString()}] Backup PostgreSQL réussi : ${filePath}`);
+    const msg = `[${new Date().toISOString()}] Backup PostgreSQL réussi : ${filePath}`;
+    console.log(msg);
+    notifySubject = 'bupy: Backup PostgreSQL réussi';
+    notifyText = msg;
     if (retentionDays && !isNaN(Number(retentionDays))) {
       const deleted = await cleanupBackups(backupDir, Number(retentionDays));
       if (deleted > 0) {
-        console.log(`[${new Date().toISOString()}] Rétention : ${deleted} ancien(s) backup(s) supprimé(s).`);
+        const msg2 = `[${new Date().toISOString()}] Rétention : ${deleted} ancien(s) backup(s) supprimé(s).`;
+        console.log(msg2);
+        notifyText += '\n' + msg2;
       }
     }
   } catch (err) {
-    console.error(`[${new Date().toISOString()}] Erreur lors du backup PostgreSQL :`, err.message);
+    const msg = `[${new Date().toISOString()}] Erreur lors du backup PostgreSQL : ${err.message}`;
+    console.error(msg);
+    notifySubject = 'bupy: Erreur backup PostgreSQL';
+    notifyText = msg;
+  }
+  // Envoi notification email si config présente
+  if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && NOTIFY_EMAIL) {
+    try {
+      await sendNotification(
+        {
+          to: NOTIFY_EMAIL,
+          subject: notifySubject,
+          text: notifyText
+        },
+        {
+          host: SMTP_HOST,
+          port: Number(SMTP_PORT),
+          secure: Number(SMTP_PORT) === 465, // true pour 465, false sinon
+          auth: { user: SMTP_USER, pass: SMTP_PASS }
+        }
+      );
+      console.log(`[${new Date().toISOString()}] Notification email envoyée à ${NOTIFY_EMAIL}`);
+    } catch (e) {
+      console.error(`[${new Date().toISOString()}] Erreur notification email :`, e.message);
+    }
   }
 }
 
