@@ -14,7 +14,10 @@ function encryptFile(filePath, outputPath, password) {
         const input = fs.createReadStream(filePath)
         const output = fs.createWriteStream(outputPath)
 
-        input.pipe(cipher).pipe(output)
+        output.write(iv, () => {
+            input.pipe(cipher).pipe(output);
+        });
+    
 
         output.on('finish', () => {
             resolve()
