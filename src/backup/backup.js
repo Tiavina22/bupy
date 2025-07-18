@@ -5,7 +5,7 @@
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const { encryptFile } = require('./utils/encrypt');
+const { encryptFile } = require('../utils/encrypt');
 
 /**
  * Effectue un dump de la base PostgreSQL

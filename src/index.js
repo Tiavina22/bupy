@@ -4,12 +4,11 @@ require('dotenv').config();
 
 
 
-
-const { backupPostgres } = require('./backup');
-const { backupMySQL } = require('./backup-mysql');
-const { backupSQLite } = require('./backup-sqlite');
-const { cleanupBackups } = require('./retention');
-const { sendNotification } = require('./notify');
+const { backupPostgres } = require('./backup/backup');
+const { backupMySQL } = require('./tests/backup-mysql');
+const { backupSQLite } = require('./backup/backup-sqlite');
+const { cleanupBackups } = require('./retention/retention');
+const { sendNotification } = require('./notify/notify');
 
 
 const cron = require('node-cron');
@@ -46,7 +45,7 @@ async function runBackup() {
     console.log("encryprion", ENCRYPTION_ENABLED == 1)
     if (DB_TYPE === 'postgres') {
       if (!PGHOST || !PGPORT || !PGUSER || !PGPASSWORD || !PGDATABASE || !backupDir) throw new Error('Config Postgres manquante');
-      filePath = await backupPostgres({ host: PGHOST, port: PGPORT, user: PGUSER, password: PGPASSWORD, database: PGDATABASE, backupDir, encryption_enabled: ENCRYPTION_ENABLED, encryption_password: ENCRYPTION_ENABLED });
+      filePath = await backupPostgres({ host: PGHOST, port: PGPORT, user: PGUSER, password: PGPASSWORD, database: PGDATABASE, backupDir, encryption_enabled: ENCRYPTION_ENABLED, encryption_password: ENCRYPTION_PASSWORD });
       msg = `[${new Date().toISOString()}] Backup PostgreSQL réussi : ${filePath}`;
     } else if (DB_TYPE === 'mysql') {
       if (!MYSQL_HOST || !MYSQL_PORT || !MYSQL_USER || !MYSQL_PASSWORD || !MYSQL_DATABASE || !backupDir) throw new Error('Config MySQL manquante');
