@@ -29,7 +29,9 @@ const {
   SMTP_PORT,
   SMTP_USER,
   SMTP_PASS,
-  NOTIFY_EMAIL
+  NOTIFY_EMAIL,
+  ENCRYPTION_ENABLED = 0,
+  ENCRYPTION_PASSWORD = ''
 } = process.env;
 
 
@@ -41,9 +43,10 @@ async function runBackup() {
   let notifySubject, notifyText, attachmentPath = undefined;
   try {
     let filePath, msg;
+    console.log("encryprion", ENCRYPTION_ENABLED == 1)
     if (DB_TYPE === 'postgres') {
       if (!PGHOST || !PGPORT || !PGUSER || !PGPASSWORD || !PGDATABASE || !backupDir) throw new Error('Config Postgres manquante');
-      filePath = await backupPostgres({ host: PGHOST, port: PGPORT, user: PGUSER, password: PGPASSWORD, database: PGDATABASE, backupDir });
+      filePath = await backupPostgres({ host: PGHOST, port: PGPORT, user: PGUSER, password: PGPASSWORD, database: PGDATABASE, backupDir, encryption_enabled: ENCRYPTION_ENABLED, encryption_password: ENCRYPTION_ENABLED });
       msg = `[${new Date().toISOString()}] Backup PostgreSQL réussi : ${filePath}`;
     } else if (DB_TYPE === 'mysql') {
       if (!MYSQL_HOST || !MYSQL_PORT || !MYSQL_USER || !MYSQL_PASSWORD || !MYSQL_DATABASE || !backupDir) throw new Error('Config MySQL manquante');
