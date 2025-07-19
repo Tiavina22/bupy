@@ -17,10 +17,12 @@ function encryptFile(filePath, outputPath, password) {
         output.write(iv, () => {
             input.pipe(cipher).pipe(output);
         });
-    
+
 
         output.on('finish', () => {
-            resolve()
+            // NOTE: Remove the file with the unencrypted (plaintext) content after encryption
+            fs.unlinkSync(filePath)
+            resolve(outputPath)
         })
 
         output.on('error', () => {
