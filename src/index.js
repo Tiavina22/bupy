@@ -2,10 +2,8 @@
 // Chargement de la configuration depuis .env
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 
-
 const { cleanupBackups } = require('./retention/retention');
 const { sendNotification } = require('./notify/notify');
-
 
 const cron = require('node-cron');
 const { validateConfig } = require('./config/config');
@@ -14,7 +12,8 @@ const path = require('path');
 const { selectEncryptFile } = require("./utils/encrypt")
 const args = require('minimist')(process.argv.slice(2))
 var prompt = require('prompt-sync')()
-const fs = require('fs')
+const fs = require('fs');
+const { decryptFile } = require('./utils/decrypt');
 // NOTE: Default to the "backups" folder at the project root if no directory is provided via args or env.
 const backupDir = path.resolve(
   args.BACKUP_DIR || process.env.BACKUP_DIR || '../backups'
@@ -34,7 +33,42 @@ const {
   NOTIFY_EMAIL
 } = process.env;
 
+async function decryptBackup() {
+  try {
+    let decryption_password = ""
+    let targetEncryptedFile = ""
+    if (args.f) {
+      // NOTE: Check whether the provided file path exists
+      if (!fs.existsSync(args.f)) {
+        throw new Error(`The file "${args.f}" does not exist. Please provide a valid path.`)
+      }
+      targetEncryptedFile = args.f
+    }
+    else {
+      const chosenBackupFile = await selectEncryptFile(backupDir)
+      targetEncryptedFile = path.join(backupDir, chosenBackupFile);
+    }
 
+    // NOTE: If the file to decrypt exists, prompt the user to enter the decryption password
+    do {
+      decryption_password = prompt.hide('Enter your decryption password: ');
+      if (!decryption_password) {
+        console.log("Password cannot be empty. Please try again.");
+      }
+    } while (!decryption_password);
+
+    const decryptedOutputPath = targetEncryptedFile.slice(0, -'.bupy'.length);
+
+    const decryptedFilePath = await decryptFile(targetEncryptedFile, decryptedOutputPath, decryption_password);
+
+    console.log("Decryption completed successfully. Output file:", decryptedFilePath);
+
+
+  } catch (error) {
+    const msg = `[${new Date().toISOString()}] Erreur decryption : ${error.message}`;
+    console.error(msg);
+  }
+}
 
 
 async function runBackup() {
@@ -153,40 +187,25 @@ async function runBackup() {
 }
 
 
-async function decryptFile() {
-  await selectEncryptFile(backupDir)
-}
-
 if (require.main === module) {
-  if (cronSchedule) {
-    // Planification automatique
-    console.log(`Planification activée : ${cronSchedule}`);
-    cron.schedule(cronSchedule, runBackup, { timezone: 'UTC' });
-    console.log('bupy est en attente des prochaines exécutions... (Ctrl+C pour quitter)');
-  } else {
-    // NOTE: If "decrypt" is not present in the arguments, the operation defaults to backup, not decryption
-    if (!args.decrypt) {
-      // Backup immédiat
-      runBackup();
-    }
-    else {
-      let targetEncryptedFile = ""
-      if (args.f) {
-        // NOTE: Check whether the provided file path exists
 
-        if (!fs.existsSync(args.f)) {
-          console.error(`The file "${args.f}" does not exist. Please provide a valid path.`);
-          process.exit(1);
-        }
-        
-        targetEncryptedFile = args.f
-        console.log("File is present: ", args.f)
+  (async () => {
+    if (cronSchedule) {
+      // Planification automatique
+      console.log(`Planification activée : ${cronSchedule}`);
+      cron.schedule(cronSchedule, runBackup, { timezone: 'UTC' });
+      console.log('bupy est en attente des prochaines exécutions... (Ctrl+C pour quitter)');
+    } else {
+      // NOTE: If "decrypt" is not present in the arguments, the operation defaults to backup, not decryption
+      if (!args.decrypt) {
+        // Backup immédiat
+        runBackup();
       }
       else {
-        console.log("hello", backupDir)
-        decryptFile()
+        decryptBackup()
       }
-    }
 
-  }
+    }
+  })();
+
 }
