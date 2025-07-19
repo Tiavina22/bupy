@@ -3,6 +3,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const { encryptFile } = require('../utils/encrypt');
 
 /**
  * Effectue un backup du fichier SQLite
@@ -18,10 +19,15 @@ function backupSQLite({ sqlitePath, backupDir }) {
     }
     const date = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `bupy-backup-sqlite-${date}.db`;
-    const filePath = path.join(backupDir, fileName);
+    let filePath = path.join(backupDir, fileName);
     fs.mkdirSync(backupDir, { recursive: true });
-    fs.copyFile(sqlitePath, filePath, (err) => {
+    fs.copyFile(sqlitePath, filePath, async (err) => {
       if (err) return reject(err);
+      // NOTE: Value 1 indicates that the user wants to encrypt the output file
+      if (encryption_enabled == 1) {
+        const outputPath = path.join(backupDir, `${fileName}.bupy`)
+        filePath = await encryptFile(filePath, outputPath, encryption_password)
+      }
       resolve(filePath);
     });
   });
