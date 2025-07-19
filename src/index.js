@@ -11,10 +11,10 @@ const cron = require('node-cron');
 const { validateConfig } = require('./config/config');
 const { getBackupStrategy } = require('./backup/backup_strategy');
 const path = require('path');
-
+const { selectEncryptFile } = require("./utils/encrypt")
 const args = require('minimist')(process.argv.slice(2))
 var prompt = require('prompt-sync')()
-
+const fs = require('fs')
 // NOTE: Default to the "backups" folder at the project root if no directory is provided via args or env.
 const backupDir = path.resolve(
   args.BACKUP_DIR || process.env.BACKUP_DIR || '../backups'
@@ -152,6 +152,11 @@ async function runBackup() {
   }
 }
 
+
+async function decryptFile() {
+  await selectEncryptFile(backupDir)
+}
+
 if (require.main === module) {
   if (cronSchedule) {
     // Planification automatique
@@ -159,7 +164,29 @@ if (require.main === module) {
     cron.schedule(cronSchedule, runBackup, { timezone: 'UTC' });
     console.log('bupy est en attente des prochaines exécutions... (Ctrl+C pour quitter)');
   } else {
-    // Backup immédiat
-    runBackup();
+    // NOTE: If "decrypt" is not present in the arguments, the operation defaults to backup, not decryption
+    if (!args.decrypt) {
+      // Backup immédiat
+      runBackup();
+    }
+    else {
+      let targetEncryptedFile = ""
+      if (args.f) {
+        // NOTE: Check whether the provided file path exists
+
+        if (!fs.existsSync(args.f)) {
+          console.error(`The file "${args.f}" does not exist. Please provide a valid path.`);
+          process.exit(1);
+        }
+        
+        targetEncryptedFile = args.f
+        console.log("File is present: ", args.f)
+      }
+      else {
+        console.log("hello", backupDir)
+        decryptFile()
+      }
+    }
+
   }
 }
