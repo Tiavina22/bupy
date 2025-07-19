@@ -24,22 +24,22 @@ function backupPostgres({ host, port, user, password, database, backupDir, encry
   return new Promise((resolve, reject) => {
     const date = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `bupy-backup-${database}-${date}.sql`;
-    const filePath = path.join(backupDir, fileName);
+    let filePath = path.join(backupDir, fileName);
+    // NOTE: This variable is currently unused and can be safely removed (env).
+    // Maintainer: please delete if confirmed unnecessary
     const env = { ...process.env, PGPASSWORD: password };
     const cmd = `pg_dump -h ${host} -p ${port} -U ${user} -F p -d ${database} -f "${filePath}"`;
     fs.mkdirSync(backupDir, { recursive: true });
+
     exec(cmd, { env }, async (error, stdout, stderr) => {
       if (error) {
         reject(new Error(stderr || error.message));
       } else {
-        console.log("File path ", filePath)
-        console.log("Encrypted enabled ", encryption_enabled)
+        // NOTE: Value 1 indicates that the user wants to encrypt the output file
         if (encryption_enabled == 1) {
           const outputPath = path.join(backupDir, `${fileName}.bupy`)
-          console.log("Output path: ", outputPath)
-          await encryptFile(filePath, outputPath, encryption_password)
+          filePath = await encryptFile(filePath, outputPath, encryption_password)
         }
-
         resolve(filePath);
       }
     });
