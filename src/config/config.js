@@ -1,3 +1,7 @@
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
+const path = require('path');
+const fs = require('fs');
+
 function validateConfig(dbType) {
     const common_required = ['BACKUP_DIR', 'ENCRYPTION_ENABLED', 'ENCRYPTION_PASSWORD']
     const requiredByDB = {
@@ -21,5 +25,9 @@ function validateConfig(dbType) {
 
     return backupDir;
 
+}
+
+module.exports = {
+    validateConfig
 }
 
