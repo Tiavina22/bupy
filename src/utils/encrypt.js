@@ -1,6 +1,8 @@
 const fs = require('fs')
 const crypto = require('crypto')
 const { error } = require('console')
+const { rawlist } = require('@inquirer/prompts'); 
+
 
 function encryptFile(filePath, outputPath, password) {
     return new Promise((resolve, reject) => {
@@ -32,7 +34,22 @@ function encryptFile(filePath, outputPath, password) {
 }
 
 
+async function selectEncryptFile(backupDir) {
+    const files = fs.readdirSync(backupDir).filter(f => f.endsWith('.bupy'));
+    if (files.length === 0) {
+        console.log("No backup files were found in the backup directory.");
+        return null;
+    }
+    const answer = await rawlist({
+        message: 'Select the file to decrypt:',
+        choices: files,
+    });
+
+    return answer
+}
+
 
 module.exports = {
-    encryptFile
+    encryptFile,
+    selectEncryptFile
 }
