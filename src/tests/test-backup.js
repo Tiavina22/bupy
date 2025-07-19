@@ -2,7 +2,7 @@
 // Test simple pour vérifier le fonctionnement du module de backup PostgreSQL
 
 require('dotenv').config();
-const { backupPostgres } = require('./backup');
+const { backupPostgres } = require('../backup');
 
 const {
   PGHOST: host,
