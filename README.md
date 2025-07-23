@@ -56,6 +56,7 @@ BACKUP_DIR=./backups
 ```
 
 ### Options communes
+
 ```
 CRON_SCHEDULE=0 2 * * *
 RETENTION_DAYS=7
@@ -65,18 +66,31 @@ SMTP_PORT=587
 SMTP_USER=utilisateur@gmail.com
 SMTP_PASS=motdepasse
 NOTIFY_EMAIL=destinataire@gmail.com
+
+# Chiffrement des backups (optionnel)
+ENCRYPTION_ENABLED=0   # 1 pour activer le chiffrement, 0 pour désactiver
+ENCRYPTION_PASSWORD=   # Peut être laissé vide, le mot de passe sera demandé lors du backup chiffré
 ```
 
 ## Utilisation
 
-- Lancer un backup immédiat :
+### Commandes npm simplifiées
+
+- Backup immédiat :
   ```bash
-  node src/index.js
+  npm run backup
   ```
-- Lancer le mode planifié (selon CRON_SCHEDULE) :
+- Backup chiffré (demande le mot de passe) :
   ```bash
-  node src/index.js
+  npm run backup:encrypt
   ```
+- Déchiffrer un backup (demande le fichier et le mot de passe) :
+  ```bash
+  npm run decrypt -- --f chemin/vers/backup.sql.bupy
+  ```
+
+### Autres commandes
+
 - Tester la rétention :
   ```bash
   node src/test-retention.js
@@ -88,7 +102,10 @@ NOTIFY_EMAIL=destinataire@gmail.com
 
 ## Documentation complète
 
-La documentation détaillée est disponible sur [https://tiavina22.github.io/bupy/](https://tiavina22.github.io/bupy/)
+
+La documentation officielle et les ressources sont disponibles sur :
+- [https://bupy-site.vercel.app/](https://bupy-site.vercel.app/)
+- Documentation Docusaurus : [https://tiavina22.github.io/bupy/](https://tiavina22.github.io/bupy/)
 
 ## Structure du projet
 - `src/` : logique principale (backup, rétention, notification)
