@@ -188,24 +188,18 @@ async function runBackup() {
 
 
 if (require.main === module) {
-
   (async () => {
-    if (cronSchedule) {
+    // Priorité à la décryption
+    if (args.decrypt) {
+      await decryptBackup();
+    } else if (cronSchedule) {
       // Planification automatique
       console.log(`Planification activée : ${cronSchedule}`);
       cron.schedule(cronSchedule, runBackup, { timezone: 'UTC' });
       console.log('bupy est en attente des prochaines exécutions... (Ctrl+C pour quitter)');
     } else {
-      // NOTE: If "decrypt" is not present in the arguments, the operation defaults to backup, not decryption
-      if (!args.decrypt) {
-        // Backup immédiat
-        runBackup();
-      }
-      else {
-        decryptBackup()
-      }
-
+      // Backup immédiat
+      await runBackup();
     }
   })();
-
 }
