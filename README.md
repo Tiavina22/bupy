@@ -1,17 +1,17 @@
 
+
 # bupy
 
+**bupy** is an open-source Node.js tool to automate backups for PostgreSQL, MySQL, and SQLite databases.
 
-**bupy** est un outil Node.js open source pour automatiser les sauvegardes (backups) de bases de données PostgreSQL, MySQL et SQLite.
-
-
-## Fonctionnalités principales
-- Sauvegarde automatique de PostgreSQL (via `pg_dump`), MySQL (via `mysqldump`) ou SQLite (copie du fichier)
-- Stockage local configurable
-- Planification flexible (cron)
-- Rétention automatique des anciens backups
-- Notifications email (avec pièce jointe du backup)
-- Interface CLI simple et scripts de test
+## Main Features
+- Automatic backup for PostgreSQL (via `pg_dump`), MySQL (via `mysqldump`), or SQLite (file copy)
+- Configurable local storage
+- Flexible scheduling (cron)
+- Automatic retention of old backups
+- Email notifications (with backup attachment)
+- Backup encryption (encrypt) and decryption (decrypt) support
+- Simple CLI interface and test scripts
 
 ## Installation
 
@@ -21,93 +21,90 @@ cd bupy
 npm install
 ```
 
+## Quick Configuration
 
-## Configuration rapide
+Create a `.env` file at the root of the project (see `.env.example`) and choose the database type to backup:
 
-Créez un fichier `.env` à la racine du projet (voir `.env.example`) et choisissez le type de base à sauvegarder :
-
-### Pour PostgreSQL
+### For PostgreSQL
 ```env
 DB_TYPE=postgres
 PGHOST=localhost
 PGPORT=5432
 PGUSER=postgres
-PGPASSWORD=motdepasse
-PGDATABASE=ma_base
+PGPASSWORD=yourpassword
+PGDATABASE=your_db
 BACKUP_DIR=./backups
 ```
 
-### Pour MySQL
+### For MySQL
 ```env
 DB_TYPE=mysql
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
 MYSQL_USER=root
-MYSQL_PASSWORD=motdepasse
-MYSQL_DATABASE=ma_base
+MYSQL_PASSWORD=yourpassword
+MYSQL_DATABASE=your_db
 BACKUP_DIR=./backups
 ```
 
-### Pour SQLite
+### For SQLite
 ```env
 DB_TYPE=sqlite
-SQLITE_PATH=./ma_base.db
+SQLITE_PATH=./your_db.db
 BACKUP_DIR=./backups
 ```
 
-### Options communes
-
+### Common Options
 ```
 CRON_SCHEDULE=0 2 * * *
 RETENTION_DAYS=7
-# Notifications email (optionnel)
+# Email notifications (optional)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=utilisateur@gmail.com
-SMTP_PASS=motdepasse
-NOTIFY_EMAIL=destinataire@gmail.com
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=yourpassword
+NOTIFY_EMAIL=recipient@gmail.com
 
-# Chiffrement des backups (optionnel)
-ENCRYPTION_ENABLED=0   # 1 pour activer le chiffrement, 0 pour désactiver
-ENCRYPTION_PASSWORD=   # Peut être laissé vide, le mot de passe sera demandé lors du backup chiffré
+# Backup encryption (optional)
+ENCRYPTION_ENABLED=0   # 1 to enable encryption, 0 to disable
+ENCRYPTION_PASSWORD=   # Can be left empty, password will be prompted during encrypted backup
 ```
 
-## Utilisation
+## Usage
 
-### Commandes npm simplifiées
+### Simplified npm commands
 
-- Backup immédiat :
+- Immediate backup:
   ```bash
   npm run backup
   ```
-- Backup chiffré (demande le mot de passe) :
+- Encrypted backup (will prompt for password):
   ```bash
   npm run backup:encrypt
   ```
-- Déchiffrer un backup (demande le fichier et le mot de passe) :
+- Decrypt a backup (will prompt for file and password):
   ```bash
-  npm run decrypt -- --f chemin/vers/backup.sql.bupy
+  npm run decrypt -- --f path/to/backup.sql.bupy
   ```
 
-### Autres commandes
+### Other commands
 
-- Tester la rétention :
+- Test retention:
   ```bash
   node src/test-retention.js
   ```
-- Tester la notification email :
+- Test email notification:
   ```bash
   node src/test-notify.js
   ```
 
-## Documentation complète
+## Full Documentation
 
-
-La documentation officielle et les ressources sont disponibles sur :
+Official documentation and resources:
 - [https://bupy-site.vercel.app/](https://bupy-site.vercel.app/)
-- Documentation Docusaurus : [https://tiavina22.github.io/bupy/](https://tiavina22.github.io/bupy/)
+- Docusaurus documentation: [https://tiavina22.github.io/bupy/](https://tiavina22.github.io/bupy/)
 
-## Structure du projet
-- `src/` : logique principale (backup, rétention, notification)
-- `docs/` : documentation Docusaurus
-- `.env.example` : exemple de configuration
+## Project Structure
+- `src/`: main logic (backup, retention, notification)
+- `docs/`: Docusaurus documentation
+- `.env.example`: configuration example
