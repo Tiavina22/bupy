@@ -94,6 +94,3 @@ La documentation détaillée est disponible sur [https://tiavina22.github.io/bup
 - `src/` : logique principale (backup, rétention, notification)
 - `docs/` : documentation Docusaurus
 - `.env.example` : exemple de configuration
-
-## Auteur
-Tiavina22
